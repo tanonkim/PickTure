@@ -1,0 +1,166 @@
+generator client {
+    provider = "prisma-client-js"
+    output   = "../../node_modules/@prisma/auth_db"
+}
+
+datasource db {
+    provider  = "postgresql"
+    url       = env("DATABASE_URL")
+    directUrl = env("DATABASE_MIGRATION_URL")
+}
+
+model config {
+    key   String @id
+    value String
+}
+
+model user {
+    id                 String         @id @default(uuid())
+    real_name          String?
+    nick_name          String?        @unique
+    mobile             String
+    email              String?
+    email_verified_at  DateTime?
+    mobile_verified_at DateTime?
+    email_is_verified  Int?           @default(0)
+    mobile_is_verified Int?           @default(0)
+    password           String?
+    profile_img        String?
+    picture_admin      picture_admin?
+    user_session       user_session?
+    picture_users      picture_users?
+    created_at         DateTime       @default(now())
+    updated_at         DateTime       @updatedAt
+    created_by_id      String?
+    created_by         user?          @relation("Registrant", fields: [created_by_id], references: [id])
+    created_users      user[]         @relation("Registrant")
+}
+
+model picture_users {
+    id                     String                   @id @default(uuid())
+    user_id                String                   @unique
+    rx_fcm                 Int?                     @default(0)
+    rx_sms                 Int?                     @default(0)
+    rx_email               Int?                     @default(0)
+    user                   user?                    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+    picture_user_addresses picture_user_addresses[]
+    created_at             DateTime                 @default(now())
+    updated_at             DateTime                 @updatedAt
+}
+
+model picture_admin {
+    id                String          @id @default(uuid())
+    user_id           String          @unique
+    user              user?           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+    classification    classification? @relation(fields: [classification_id], references: [id])
+    classification_id String?
+    status            UserStatus?     @default(ACTIVE)
+    status_changed_at DateTime?
+    created_at        DateTime        @default(now())
+    updated_at        DateTime        @updatedAt
+
+    @@map("picture_admins")
+}
+
+model picture_user_addresses {
+    id               String         @id @default(uuid())
+    user_id          String?
+    real_name        String?        @default("")
+    phone            String?        @default("")
+    street_address   String?        @db.VarChar(255)
+    ground_address   String
+    detailed_address String
+    postcode         Int?           @default(1)
+    flag             Boolean?
+    picture_users    picture_users? @relation(fields: [user_id], references: [id], onDelete: Cascade)
+    created_at       DateTime       @default(now())
+    updated_at       DateTime       @updatedAt
+}
+
+enum UserStatus {
+    ACTIVE
+    INACTIVE
+}
+
+model admin_types {
+    id             String           @id @default(uuid())
+    name           String           @unique
+    description    String?
+    classification classification[]
+    created_at     DateTime         @default(now())
+    updated_at     DateTime         @updatedAt
+
+    @@map("admin_types")
+}
+
+model classification {
+    id            String          @id @default(uuid())
+    name          String          @unique
+    description   String?
+    admin_type    admin_types?    @relation(fields: [admin_type_id], references: [id])
+    admin_type_id String
+    user          picture_admin[]
+    created_at    DateTime        @default(now())
+    updated_at    DateTime        @updatedAt
+
+    @@map("classifications")
+}
+
+model permission {
+    id         String   @id @default(uuid())
+    name       String   @unique
+    permission Int      @default(0) @db.Integer
+    created_at DateTime @default(now())
+    updated_at DateTime @updatedAt
+
+    @@map("permissions")
+}
+
+model user_session {
+    id                  String    @id @default(uuid())
+    user_id             String    @unique
+    refresh_token       String?
+    temp_key            String?
+    temp_key_expires_at DateTime?
+    last_login_date     DateTime?
+    inactive_date       DateTime?
+    user                user?     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+    created_at          DateTime  @default(now())
+    updated_at          DateTime  @updatedAt
+}
+
+model user_otp {
+    id             String    @id @default(uuid())
+    mobile         String
+    otp            String
+    level          String
+    otp_expires_at DateTime?
+    updated_at     DateTime? @default(now())
+    created_at     DateTime? @default(now())
+}
+
+model inactive_and_unsubscribed_user {
+    id                   String              @id @default(uuid())
+    real_name            String?
+    nick_name            String?
+    mobile               String
+    email                String?
+    email_verified_at    DateTime?
+    mobile_verified_at   DateTime?
+    email_is_verified    Int?                @default(0)
+    mobile_is_verified   Int?                @default(0)
+    password             String?
+    status               InactiveUserStatus? @default(Inactive)
+    inactive_date        DateTime?
+    unsubscribed_date    DateTime?
+    unsubscribed_reason  String?
+    unsubscribe_comments String?
+    profile_img          String?
+    created_at           DateTime            @default(now())
+    updated_at           DateTime            @updatedAt
+}
+
+enum InactiveUserStatus {
+    Inactive
+    Unsubscribed
+}
