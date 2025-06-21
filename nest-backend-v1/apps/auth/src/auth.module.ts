@@ -10,6 +10,7 @@ import { AuthController } from './auth.controller';
 import { CUSTOM_LOGGER } from '@app/common/constant';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { AllExceptionFilter } from '@app/common/exceptionFilter.service';
+import { MyValidationPipe } from '@app/common/pipes/validation.pipe';
 
 @Module({
   imports: [AppConfigModule, PrismaModule],
@@ -18,6 +19,7 @@ import { AllExceptionFilter } from '@app/common/exceptionFilter.service';
     AuthService,
     { provide: APP_FILTER, useClass: AllExceptionFilter },
     { provide: CUSTOM_LOGGER, useClass: CustomLogger },
+    { provide: APP_PIPE, useClass: MyValidationPipe },
   ],
 })
 export class AuthModule implements NestModule {
