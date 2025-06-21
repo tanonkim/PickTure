@@ -6,6 +6,7 @@ import {
   NestMiddleware,
 } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
+import { CUSTOM_LOGGER } from './constant';
 
 @Injectable()
 export class CustomLogger implements LoggerService {
@@ -36,15 +37,17 @@ export class CustomLogger implements LoggerService {
 }
 @Injectable()
 export class RequestLoggerMiddleware implements NestMiddleware {
-  constructor() {} // @Inject('CUSTOM_LOGGER') private readonly customLogger: CustomLogger,
+  constructor(
+    @Inject(CUSTOM_LOGGER) private readonly customLogger: CustomLogger,
+  ) {}
   use(req: Request, res: Response, next: NextFunction) {
     const { method, originalUrl, body } = req;
     res.on('close', () => {
       const { statusCode } = res;
-      // this.customLogger.log(
-      //   `${method} ${originalUrl} ${statusCode} ${JSON.stringify(body)}`,
-      //   RequestLoggerMiddleware.name,
-      // );
+      this.customLogger.log(
+        `${method} ${originalUrl} ${statusCode} ${JSON.stringify(body)}`,
+        RequestLoggerMiddleware.name,
+      );
     });
     next();
   }
