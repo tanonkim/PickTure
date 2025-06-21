@@ -11,9 +11,28 @@ import { CUSTOM_LOGGER } from '@app/common/constant';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { AllExceptionFilter } from '@app/common/exceptionFilter.service';
 import { MyValidationPipe } from '@app/common/pipes/validation.pipe';
+import { JwkModule } from '../../../libs/common/jwk/jwk.module';
+import { AppConfigService } from './config/app/config.service';
 
 @Module({
-  imports: [AppConfigModule, PrismaModule],
+  imports: [
+    AppConfigModule,
+    PrismaModule,
+    JwkModule.forRootAsync(JwkModule, {
+      imports: [AppConfigModule],
+      inject: [AppConfigService],
+      useFactory: (configService: AppConfigService) => {
+        return {
+          configService: {
+            apiPassKey: configService.apiPassKey,
+            env: configService.env,
+            jwtIssuer: configService.jwtIssuer,
+            jwtPublic: configService.jwtPublic,
+          },
+        };
+      },
+    }),
+  ],
   controllers: [AuthController],
   providers: [
     AuthService,
