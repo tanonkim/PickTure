@@ -11,7 +11,7 @@ import { CUSTOM_LOGGER } from '@app/common/constant';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
 import { AllExceptionFilter } from '@app/common/exceptionFilter.service';
 import { MyValidationPipe } from '@app/common/pipes/validation.pipe';
-import { JwkModule } from '../../../libs/common/jwk/jwt.module';
+import { JwkModule } from '../../../libs/common/jwk/jwk.module';
 import { AppConfigService } from './config/app/config.service';
 
 @Module({
