@@ -1,0 +1,69 @@
+version: '1.0'
+
+services:
+  # 읽기 쓰기 동시에 가능한 primary 서버
+  postgres:
+    image: 'bitnami/postgresql:15'
+    container_name: picture-postgres
+    ports:
+      - '5555:5432'
+    restart: always
+    volumes:
+      - 'postgres_primary_data:/bitnami/postgresql'
+    environment:
+      - POSTGRESQL_PASSWORD=12341234
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=postgres
+      - POSTGRESQL_REPLICATION_PASSWORD=12341234
+
+  # 읽기 전용 secondary 서버
+  postgres-slave:
+    image: 'bitnami/postgresql:15'
+    container_name: picture-postgres-slave
+    ports:
+      - '5556:5432'
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      - POSTGRESQL_PASSWORD=12341234
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_MASTER_HOST=postgres
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432
+      - POSTGRESQL_REPLICATION_USER=postgres
+      - POSTGRESQL_REPLICATION_PASSWORD=12341234
+
+  rabbitmq:
+    image: bitnami/rabbitmq:3.12.1
+    container_name: picture-rabbitmq
+    ports:
+      - 3672:5672
+      - 13672:15672
+    environment:
+      # 로컬 큐 서버는 환경변수 관리 안함
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
+    volumes:
+      - rabbitmq_data:/bitnami/rabbitmq/mnesia
+
+  minio:
+    image: bitnami/minio:2023.7.18-debian-11-r0
+    container_name: picture-minio
+    environment:
+      - MINIO_ROOT_USER=minio
+      - MINIO_ROOT_PASSWORD=miniopass
+    restart: always
+    ports:
+      - '9011:9000'
+      - '9012:9001'
+    volumes:
+      - data_minio:/data
+
+volumes:
+  postgres_primary_data:
+  data_minio:
+  rabbitmq_data:
+
+networks:
+  default:
+    name: picture-network
